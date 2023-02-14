@@ -14,8 +14,7 @@ export async function ensurePrismaImportInstalled(): Promise<void> {
     let cmd = `npx prisma-import --help`;
     exec(cmd, (err) => {
       if(err) {
-        console.log(err);
-        return reject();
+        throw new Error("Prisma Import is not installed. Please install it with 'npm i -g prisma-import'.")
       }
       return resolve();
     });
@@ -25,10 +24,10 @@ export async function ensurePrismaImportInstalled(): Promise<void> {
 export async function ensureInitiated(): Promise<void> {
   return new Promise((resolve, reject) => {
     if(!existsSync(join(process.cwd(), "prisma"))) {
-      reject("Prisma is not initiated. Please run 'npx prisma init' first.");
+      throw new Error("Prisma is not initiated. Please run 'npx prisma init' first.");
     }
     else if(!existsSync(join(process.cwd(), "prisma", "models"))) {
-      reject("Prismixer is not initiated. Please run 'npx prismixer init' first.");
+      throw new Error("Prismixer is not initiated. Please run 'npx prismixer init' first.");
     }
     else {
       resolve();

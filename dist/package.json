@@ -1,11 +1,11 @@
 {
-    "name": "temp",
+    "name": "prismixer",
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
     "bin": "dist/bin/cli.js",
     "scripts": {
-        "prisma": "npx prisma-import --schemas 'prisma/models/*.prisma' --output 'prisma/schema.prisma'"
+        "build": "npx tsc"
     },
     "keywords": [],
     "author": "",

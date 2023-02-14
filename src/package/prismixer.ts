@@ -9,13 +9,8 @@ import { formatPrismaFile, deleteTempFile, generatePrismaClient } from "./postpr
 export async function run() {
 
   // Preprocess
-  try {
-    await ensurePrismaImportInstalled()
-  } catch(_) {
-    return console.error("Prisma Import is not installed. Please install it with 'npm i -g prisma-import'.")
-  }
+  await ensurePrismaImportInstalled()
   await ensureInitiated()
-    .catch(console.error);
   await ensureTempFileDeleted();
   await prismaImport();
 

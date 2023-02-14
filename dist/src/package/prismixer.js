@@ -11,14 +11,8 @@ const preprocess_1 = require("./preprocess");
 const postprocess_1 = require("./postprocess");
 async function run() {
     // Preprocess
-    try {
-        await (0, preprocess_1.ensurePrismaImportInstalled)();
-    }
-    catch (_) {
-        return console.error("Prisma Import is not installed. Please install it with 'npm i -g prisma-import'.");
-    }
-    await (0, preprocess_1.ensureInitiated)()
-        .catch(console.error);
+    await (0, preprocess_1.ensurePrismaImportInstalled)();
+    await (0, preprocess_1.ensureInitiated)();
     await (0, preprocess_1.ensureTempFileDeleted)();
     await (0, preprocess_1.prismaImport)();
     let schema = await loadFile(constants_1.default.tempMergeFilename);
