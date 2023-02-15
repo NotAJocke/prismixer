@@ -3,14 +3,15 @@ import { join } from "path";
 
 import constants from "../constants";
 import { Model, Datasource, Generator } from "./models";
-import { ensureInitiated, ensurePrismaImportInstalled, ensureTempFileDeleted, prismaImport } from "./preprocess";
+import { ensureInitiated, ensureModelsCreated, ensurePrismaImportInstalled, ensureTempFileDeleted, prismaImport } from "./preprocess";
 import { formatPrismaFile, deleteTempFile, generatePrismaClient } from "./postprocess";
 
 export async function run() {
 
   // Preprocess
-  await ensurePrismaImportInstalled()
-  await ensureInitiated()
+  await ensurePrismaImportInstalled();
+  await ensureInitiated();
+  await ensureModelsCreated();
   await ensureTempFileDeleted();
   await prismaImport();
 

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.prismaImport = exports.ensureInitiated = exports.ensurePrismaImportInstalled = exports.ensureTempFileDeleted = void 0;
+exports.initPrismixer = exports.prismaImport = exports.ensureInitiated = exports.ensurePrismaImportInstalled = exports.ensureModelsCreated = exports.ensureTempFileDeleted = void 0;
 const fs_1 = require("fs");
 const child_process_1 = require("child_process");
 const constants_1 = __importDefault(require("../constants"));
@@ -14,6 +14,24 @@ async function ensureTempFileDeleted() {
     }
 }
 exports.ensureTempFileDeleted = ensureTempFileDeleted;
+async function ensureModelsCreated() {
+    return new Promise((resolve, reject) => {
+        let prismaFolder = (0, path_1.join)(process.cwd(), "prisma");
+        try {
+            let files = (0, fs_1.readdirSync)((0, path_1.join)(prismaFolder, "models"));
+            if (files.length === 0) {
+                throw new Error("No models found. Please create at least one model in 'prisma/models'.");
+            }
+            else {
+                resolve();
+            }
+        }
+        catch (_) {
+            throw new Error("No models found. Please create at least one model in 'prisma/models'.");
+        }
+    });
+}
+exports.ensureModelsCreated = ensureModelsCreated;
 async function ensurePrismaImportInstalled() {
     return new Promise((resolve, reject) => {
         let cmd = `npx prisma-import --help`;
@@ -52,3 +70,36 @@ async function prismaImport() {
     });
 }
 exports.prismaImport = prismaImport;
+async function initPrismixer() {
+    let prismaFolder = (0, path_1.join)(process.cwd(), "prisma");
+    // Remove prisma file
+    if ((0, fs_1.existsSync)((0, path_1.join)(prismaFolder, "schema.prisma"))) {
+        (0, fs_1.rmSync)((0, path_1.join)(prismaFolder, "schema.prisma"));
+    }
+    // Create models folder
+    if (!(0, fs_1.existsSync)((0, path_1.join)(prismaFolder, "models"))) {
+        (0, fs_1.mkdirSync)((0, path_1.join)(prismaFolder, "models"));
+    }
+    // create base file
+    let baseFilepath = (0, path_1.join)(prismaFolder, "models", "base.prisma");
+    let data = `
+  datasource db {
+    provider = "mongodb"
+    url      = "mongodb://localhost:27017/test"
+  }
+  
+  generator client {
+    provider = "prisma-client-js"
+  }
+  `;
+    if (!(0, fs_1.existsSync)(baseFilepath)) {
+        (0, fs_1.writeFileSync)(baseFilepath, data, { encoding: "utf-8" });
+    }
+    let cmd = `npx prisma format --schema ${(0, path_1.join)(process.cwd(), "prisma", "models", "base.prisma")}`;
+    (0, child_process_1.exec)(cmd, (err) => {
+        if (err) {
+            console.error(err);
+        }
+    });
+}
+exports.initPrismixer = initPrismixer;
