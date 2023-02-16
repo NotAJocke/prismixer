@@ -4,9 +4,7 @@
     "description": "",
     "main": "index.js",
     "bin": "dist/bin/cli.js",
-    "scripts": {
-        "build": "npx tsc"
-    },
+    "scripts": {},
     "keywords": [],
     "author": "",
     "license": "ISC",

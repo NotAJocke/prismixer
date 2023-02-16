@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import constants from "../constants";
 import { join } from "path";
 import { getUserPreferences, setUserPreferences } from "../userPreferences";
+import { getPackageManager, getPackageManagerExecuter } from "../utils";
 
 export async function ensureTempFileDeleted() {
   if(existsSync(join(process.cwd(), "prisma", constants.tempMergeFilename + ".prisma"))) {
@@ -30,10 +31,12 @@ export async function ensureModelsCreated(): Promise<void> {
 
 export async function ensurePrismaImportInstalled(): Promise<void> {
   return new Promise((resolve, reject) => {
-    let cmd = `npx prisma-import --help`;
+    const executer = getPackageManagerExecuter();
+    let cmd = `${executer} prisma-import --help`;
     exec(cmd, (err) => {
       if(err) {
-        throw new Error("Prisma Import is not installed. Please install it with 'npm i -g prisma-import'.")
+        let manager = getPackageManager();
+        throw new Error(`Prisma Import is not installed. Please install it with '${manager} i -g prisma-import'.`)
       }
       return resolve();
     });
@@ -42,14 +45,16 @@ export async function ensurePrismaImportInstalled(): Promise<void> {
 
 export async function ensureInitiated(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if(!existsSync(join(process.cwd(), "prisma"))) {
-      throw new Error("Prisma is not initiated. Please run 'npx prisma init' first.");
+    if(getUserPreferences() == null || getUserPreferences()?.packageManager == null) {
+      throw new Error(`No package manager found. Please run 'npx prismixer init' first.`);
+    }
+    else if(!existsSync(join(process.cwd(), "prisma"))) {
+      const executer = getPackageManagerExecuter();
+      throw new Error(`Prisma is not initiated. Please run '${executer} prisma init' first.`);
     }
     else if(!existsSync(join(process.cwd(), "prisma", "models"))) {
-      throw new Error("Prismixer is not initiated. Please run 'npx prismixer init' first.");
-    }
-    else if(getUserPreferences() == null || getUserPreferences()?.packageManager == null) {
-      throw new Error("No package manager found. Please run 'npx prismixer init' first.");
+      const executer = getPackageManagerExecuter();
+      throw new Error(`Prismixer is not initiated. Please run '${executer} prismixer init' first.`);
     }
     else {
       resolve();
@@ -60,7 +65,8 @@ export async function ensureInitiated(): Promise<void> {
 export async function prismaImport(): Promise<boolean> {
 
   return new Promise((resolve, reject) => {
-    let cmd = `npx prisma-import --schemas 'prisma/models/*.prisma' --output 'prisma/${constants.tempMergeFilename}.prisma'`;
+    const executer = getPackageManagerExecuter();
+    let cmd = `${executer} prisma-import --schemas 'prisma/models/*.prisma' --output 'prisma/${constants.tempMergeFilename}.prisma'`;
     exec(cmd, (err) => {
       if(err) {
         console.log(err);

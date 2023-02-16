@@ -9,8 +9,8 @@ import { formatPrismaFile, deleteTempFile, generatePrismaClient } from "./postpr
 export async function run() {
 
   // Preprocess
-  await ensurePrismaImportInstalled();
   await ensureInitiated();
+  await ensurePrismaImportInstalled();
   await ensureModelsCreated();
   await ensureTempFileDeleted();
   await prismaImport();

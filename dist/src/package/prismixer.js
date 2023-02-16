@@ -11,8 +11,8 @@ const preprocess_1 = require("./preprocess");
 const postprocess_1 = require("./postprocess");
 async function run() {
     // Preprocess
-    await (0, preprocess_1.ensurePrismaImportInstalled)();
     await (0, preprocess_1.ensureInitiated)();
+    await (0, preprocess_1.ensurePrismaImportInstalled)();
     await (0, preprocess_1.ensureModelsCreated)();
     await (0, preprocess_1.ensureTempFileDeleted)();
     await (0, preprocess_1.prismaImport)();
