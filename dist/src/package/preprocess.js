@@ -83,6 +83,10 @@ exports.prismaImport = prismaImport;
 async function initPrismixer(packageManager) {
     (0, userPreferences_1.setUserPreferences)({ packageManager: packageManager });
     let prismaFolder = (0, path_1.join)(process.cwd(), "prisma");
+    if (!(0, fs_1.existsSync)(prismaFolder)) {
+        const executer = (0, utils_1.getPackageManagerExecuter)();
+        throw new Error(`Prisma is not initiated. Please run '${executer} prisma init' first.`);
+    }
     // Remove prisma file
     if ((0, fs_1.existsSync)((0, path_1.join)(prismaFolder, "schema.prisma"))) {
         (0, fs_1.rmSync)((0, path_1.join)(prismaFolder, "schema.prisma"));
@@ -106,7 +110,8 @@ async function initPrismixer(packageManager) {
     if (!(0, fs_1.existsSync)(baseFilepath)) {
         (0, fs_1.writeFileSync)(baseFilepath, data, { encoding: "utf-8" });
     }
-    let cmd = `npx prisma format --schema ${(0, path_1.join)(process.cwd(), "prisma", "models", "base.prisma")}`;
+    const executer = (0, utils_1.getPackageManagerExecuter)();
+    let cmd = `${executer} prisma format --schema ${(0, path_1.join)(process.cwd(), "prisma", "models", "base.prisma")}`;
     (0, child_process_1.exec)(cmd, (err) => {
         if (err) {
             console.error(err);

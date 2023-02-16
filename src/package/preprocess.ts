@@ -35,8 +35,9 @@ export async function ensurePrismaImportInstalled(): Promise<void> {
     let cmd = `${executer} prisma-import --help`;
     exec(cmd, (err) => {
       if(err) {
-        let manager = getPackageManager();
-        throw new Error(`Prisma Import is not installed. Please install it with '${manager} i -g prisma-import'.`)
+        const manager = getPackageManager();
+        const e = `Prisma Import is not installed. Please install it with '${manager} i prisma-import'.`
+        throw new Error(e);
       }
       return resolve();
     });
@@ -82,6 +83,11 @@ export async function initPrismixer(packageManager: string) {
 
   let prismaFolder = join(process.cwd(), "prisma");
 
+  if(!existsSync(prismaFolder)) {
+    const executer = getPackageManagerExecuter();
+    throw new Error(`Prisma is not initiated. Please run '${executer} prisma init' first.`);
+  }
+
   // Remove prisma file
   if(existsSync(join(prismaFolder, "schema.prisma"))) {
     rmSync(join(prismaFolder, "schema.prisma"));
@@ -108,7 +114,8 @@ export async function initPrismixer(packageManager: string) {
     writeFileSync(baseFilepath, data, { encoding: "utf-8" });
   }
 
-  let cmd = `npx prisma format --schema ${join(process.cwd(), "prisma", "models", "base.prisma")}`;
+  const executer = getPackageManagerExecuter();
+  let cmd = `${executer} prisma format --schema ${join(process.cwd(), "prisma", "models", "base.prisma")}`;
   exec(cmd, (err) => {
     if(err) {
       console.error(err);

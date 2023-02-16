@@ -1,4 +1,4 @@
-import { getUserPreferences } from "./userPreferences";
+import { getUserPreferences, setUserPreferences } from "./userPreferences";
 
 export function getPackageManager() {
 
@@ -18,3 +18,6 @@ export function getPackageManagerExecuter() {
       return "pnpm exec";
   }
 }
+
+setUserPreferences({ packageManager: "pnpm" });
+console.log(getPackageManagerExecuter())

@@ -1,4 +1,5 @@
 import { exec } from "child_process";
+import { rmSync } from "fs";
 import { join } from "path";
 
 import constants from "../constants";
@@ -19,13 +20,12 @@ export async function formatPrismaFile(): Promise<void> {
 
 export async function deleteTempFile(): Promise<void> {
   return new Promise((resolve, reject) => {
-    let cmd = `rm ${join(process.cwd(), "prisma", `${constants.tempMergeFilename}.prisma`)}`;
-    exec(cmd, (err) => {
-      if(err) {
-        console.log(err);
-      }
+    try {
+      rmSync(join(process.cwd(), "prisma", `${constants.tempMergeFilename}.prisma`));
       return resolve();
-    });
+    } catch (err: any) {
+      throw new Error(err);
+    }
   });
 }
 
