@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.main = void 0;
 const nanospinner_1 = require("nanospinner");
 const preprocess_1 = require("../package/preprocess");
+const enquirer_1 = require("enquirer");
 const prismixer_1 = require("../package/prismixer");
 async function main() {
     const args = process.argv.slice(2);
@@ -24,7 +25,19 @@ async function main() {
         case "init":
             let spinner = (0, nanospinner_1.createSpinner)("Initializing Prismixer...");
             try {
-                await (0, preprocess_1.initPrismixer)();
+                let answers = await (0, enquirer_1.prompt)([
+                    {
+                        type: "select",
+                        name: "packageManager",
+                        message: "Which package manager do you use?",
+                        choices: [
+                            "npm",
+                            "pnpm"
+                        ]
+                    }
+                ]);
+                const packageManager = answers.packageManager;
+                await (0, preprocess_1.initPrismixer)(packageManager);
                 spinner.success({ text: "Prismixer initialized!" });
             }
             catch (e) {

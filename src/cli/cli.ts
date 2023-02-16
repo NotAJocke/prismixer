@@ -1,7 +1,9 @@
 import { createSpinner } from "nanospinner";
 import { initPrismixer } from "../package/preprocess";
+import { prompt } from "enquirer";
 
 import { run } from "../package/prismixer";
+import { UserPreferences } from "../package/models";
 
 export async function main() {
   
@@ -26,7 +28,19 @@ export async function main() {
     case "init":
       let spinner = createSpinner("Initializing Prismixer...");
       try {
-        await initPrismixer()
+        let answers = await prompt([
+          {
+            type: "select",
+            name: "packageManager",
+            message: "Which package manager do you use?",
+            choices: [
+              "npm",
+              "pnpm"
+            ]
+          }
+        ]);
+        const packageManager = (<UserPreferences>answers).packageManager
+        await initPrismixer(packageManager)
         spinner.success({ text: "Prismixer initialized!" });
       } catch(e) {
         spinner.error({ text: "Prismixer failed to initialize!" });

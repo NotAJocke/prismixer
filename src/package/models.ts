@@ -20,3 +20,7 @@ export interface Generator {
   provider: string;
   output?: string;
 }
+
+export interface UserPreferences {
+  packageManager: string;
+}

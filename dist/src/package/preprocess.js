@@ -8,6 +8,7 @@ const fs_1 = require("fs");
 const child_process_1 = require("child_process");
 const constants_1 = __importDefault(require("../constants"));
 const path_1 = require("path");
+const userPreferences_1 = require("../userPreferences");
 async function ensureTempFileDeleted() {
     if ((0, fs_1.existsSync)((0, path_1.join)(process.cwd(), "prisma", constants_1.default.tempMergeFilename + ".prisma"))) {
         (0, fs_1.rmSync)((0, path_1.join)(process.cwd(), "prisma", constants_1.default.tempMergeFilename + ".prisma"));
@@ -19,7 +20,7 @@ async function ensureModelsCreated() {
         let prismaFolder = (0, path_1.join)(process.cwd(), "prisma");
         try {
             let files = (0, fs_1.readdirSync)((0, path_1.join)(prismaFolder, "models"));
-            if (files.length === 0) {
+            if (files.length <= 1) {
                 throw new Error("No models found. Please create at least one model in 'prisma/models'.");
             }
             else {
@@ -52,6 +53,9 @@ async function ensureInitiated() {
         else if (!(0, fs_1.existsSync)((0, path_1.join)(process.cwd(), "prisma", "models"))) {
             throw new Error("Prismixer is not initiated. Please run 'npx prismixer init' first.");
         }
+        else if ((0, userPreferences_1.getUserPreferences)() == null || (0, userPreferences_1.getUserPreferences)()?.packageManager == null) {
+            throw new Error("No package manager found. Please run 'npx prismixer init' first.");
+        }
         else {
             resolve();
         }
@@ -70,7 +74,8 @@ async function prismaImport() {
     });
 }
 exports.prismaImport = prismaImport;
-async function initPrismixer() {
+async function initPrismixer(packageManager) {
+    (0, userPreferences_1.setUserPreferences)({ packageManager: packageManager });
     let prismaFolder = (0, path_1.join)(process.cwd(), "prisma");
     // Remove prisma file
     if ((0, fs_1.existsSync)((0, path_1.join)(prismaFolder, "schema.prisma"))) {

@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.10.1",
-    "inquirer": "^9.1.4",
+    "enquirer": "^2.3.6",
     "nanospinner": "^1.1.0",
     "prisma": "^4.10.1",
     "prisma-import": "^1.0.4"

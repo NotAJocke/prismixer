@@ -2,6 +2,7 @@ import { existsSync, rmSync, mkdirSync, writeFileSync, readdirSync } from "fs";
 import { exec } from "child_process";
 import constants from "../constants";
 import { join } from "path";
+import { getUserPreferences, setUserPreferences } from "../userPreferences";
 
 export async function ensureTempFileDeleted() {
   if(existsSync(join(process.cwd(), "prisma", constants.tempMergeFilename + ".prisma"))) {
@@ -47,6 +48,9 @@ export async function ensureInitiated(): Promise<void> {
     else if(!existsSync(join(process.cwd(), "prisma", "models"))) {
       throw new Error("Prismixer is not initiated. Please run 'npx prismixer init' first.");
     }
+    else if(getUserPreferences() == null || getUserPreferences()?.packageManager == null) {
+      throw new Error("No package manager found. Please run 'npx prismixer init' first.");
+    }
     else {
       resolve();
     }
@@ -66,7 +70,10 @@ export async function prismaImport(): Promise<boolean> {
   })
 }
 
-export async function initPrismixer() {
+export async function initPrismixer(packageManager: string) {
+
+  setUserPreferences({ packageManager: packageManager })
+
   let prismaFolder = join(process.cwd(), "prisma");
 
   // Remove prisma file
