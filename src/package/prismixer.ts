@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
 import constants from "../constants";
-import { Model, Datasource, Generator } from "./models";
+import { Model, Datasource, Generator, Enum } from "./models";
 import { ensureInitiated, ensureModelsCreated, ensurePrismaImportInstalled, ensureTempFileDeleted, prismaImport } from "./preprocess";
 import { formatPrismaFile, deleteTempFile, generatePrismaClient } from "./postprocess";
 
@@ -19,9 +19,12 @@ export async function run() {
   let data = await cleanFile(schema) as string[];
   let datasource = await getDatasource(data);
   let generator = await getGenerator(data)
-  let models = await parseModels(data);
+  let { models, enums } = await parseSchema(data);
   models = await mergeModels(models);
-  await generateFile(datasource as Datasource, generator as Generator, models);
+  if(enums.length > 0) {
+    enums = await mergeEnums(enums);
+  }
+  await generateFile(datasource as Datasource, generator as Generator, models, enums);
 
   // Postprocess
   await formatPrismaFile()
@@ -41,8 +44,9 @@ export async function loadFile(filename: string) {
   return readFileSync(join(process.cwd(), "prisma", `${filename}.prisma`), { encoding: 'utf-8' });
 }
 
-export async function parseModels(schema: string[]) {
+export async function parseSchema(schema: string[]) {
   let models: Model[] = [];
+  let enums: Enum[] = [];
 
   for(let line in schema) {
 
@@ -75,9 +79,32 @@ export async function parseModels(schema: string[]) {
         }
       }
     }
+
+    if(schema[line]?.startsWith("enum")) {
+      let enumSchema: Enum = {
+        name: schema[line].split(" ")[1],
+        props: []
+      }
+
+      for(let i = parseInt(line) + 1; i < schema.length; i++) {
+          
+          if(schema[i]?.startsWith("}")) {
+            enums.push(enumSchema);
+            break;
+          } else {
+  
+            let line = schema[i].trim().split(" ")
+            let prop = line[0];
+  
+            enumSchema.props?.push({
+              name: prop
+            });
+          }
+        }
+    }
   }
 
-  return models;
+  return { models, enums };
 }
 
 export async function getDatasource(schema: string[]) {
@@ -162,7 +189,29 @@ export async function mergeModels(models: Model[]) {
   return mergedModels;
 }
 
-export async function generateFile(datasource: Datasource, generator: Generator, models: Model[]) {
+export async function mergeEnums(enums: Enum[]) {
+
+  let mergedEnums: Enum[] = [];
+
+  for(let enumSchema of enums) {
+      
+    let existingEnum = mergedEnums.find((e) => e.name === enumSchema.name);
+
+    if(existingEnum) {
+      for(let prop of enumSchema.props) {
+        if(!existingEnum.props.find((p) => p.name === prop.name)) {
+          existingEnum.props.push(prop);
+        }
+      }
+    } else {
+      mergedEnums.push(enumSchema);
+    }
+  }
+
+  return mergedEnums;
+}
+
+export async function generateFile(datasource: Datasource, generator: Generator, models: Model[], enums: Enum[]) {
   
   let file = `
   datasource ${datasource.name} {
@@ -182,6 +231,17 @@ export async function generateFile(datasource: Datasource, generator: Generator,
     model ${model.name} {
     ${model.props.map((p) => {
       return `\t${p.name} ${p.type} ${p.args ? p.args.join(" ") : ""}`
+    }
+    ).join("\n")}
+    }`;
+  }
+
+  for(let enumSchema of enums) {
+    file += `
+
+    enum ${enumSchema.name} {
+    ${enumSchema.props.map((p) => {
+      return `\t${p.name}`
     }
     ).join("\n")}
     }`;

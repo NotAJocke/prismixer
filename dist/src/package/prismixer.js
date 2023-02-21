@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateFile = exports.mergeModels = exports.getGenerator = exports.getDatasource = exports.parseModels = exports.loadFile = exports.cleanFile = exports.run = void 0;
+exports.generateFile = exports.mergeEnums = exports.mergeModels = exports.getGenerator = exports.getDatasource = exports.parseSchema = exports.loadFile = exports.cleanFile = exports.run = void 0;
 const fs_1 = require("fs");
 const path_1 = require("path");
 const constants_1 = __importDefault(require("../constants"));
@@ -20,9 +20,12 @@ async function run() {
     let data = await cleanFile(schema);
     let datasource = await getDatasource(data);
     let generator = await getGenerator(data);
-    let models = await parseModels(data);
+    let { models, enums } = await parseSchema(data);
     models = await mergeModels(models);
-    await generateFile(datasource, generator, models);
+    if (enums.length > 0) {
+        enums = await mergeEnums(enums);
+    }
+    await generateFile(datasource, generator, models, enums);
     // Postprocess
     await (0, postprocess_1.formatPrismaFile)();
     await (0, postprocess_1.deleteTempFile)();
@@ -41,8 +44,9 @@ async function loadFile(filename) {
     return (0, fs_1.readFileSync)((0, path_1.join)(process.cwd(), "prisma", `${filename}.prisma`), { encoding: 'utf-8' });
 }
 exports.loadFile = loadFile;
-async function parseModels(schema) {
+async function parseSchema(schema) {
     let models = [];
+    let enums = [];
     for (let line in schema) {
         if (schema[line]?.startsWith("model")) {
             let model = {
@@ -70,10 +74,29 @@ async function parseModels(schema) {
                 }
             }
         }
+        if (schema[line]?.startsWith("enum")) {
+            let enumSchema = {
+                name: schema[line].split(" ")[1],
+                props: []
+            };
+            for (let i = parseInt(line) + 1; i < schema.length; i++) {
+                if (schema[i]?.startsWith("}")) {
+                    enums.push(enumSchema);
+                    break;
+                }
+                else {
+                    let line = schema[i].trim().split(" ");
+                    let prop = line[0];
+                    enumSchema.props?.push({
+                        name: prop
+                    });
+                }
+            }
+        }
     }
-    return models;
+    return { models, enums };
 }
-exports.parseModels = parseModels;
+exports.parseSchema = parseSchema;
 async function getDatasource(schema) {
     for (let line in schema) {
         if (schema[line]?.startsWith("datasource")) {
@@ -150,7 +173,25 @@ async function mergeModels(models) {
     return mergedModels;
 }
 exports.mergeModels = mergeModels;
-async function generateFile(datasource, generator, models) {
+async function mergeEnums(enums) {
+    let mergedEnums = [];
+    for (let enumSchema of enums) {
+        let existingEnum = mergedEnums.find((e) => e.name === enumSchema.name);
+        if (existingEnum) {
+            for (let prop of enumSchema.props) {
+                if (!existingEnum.props.find((p) => p.name === prop.name)) {
+                    existingEnum.props.push(prop);
+                }
+            }
+        }
+        else {
+            mergedEnums.push(enumSchema);
+        }
+    }
+    return mergedEnums;
+}
+exports.mergeEnums = mergeEnums;
+async function generateFile(datasource, generator, models, enums) {
     let file = `
   datasource ${datasource.name} {
     provider = ${datasource.provider}
@@ -168,6 +209,15 @@ async function generateFile(datasource, generator, models) {
     model ${model.name} {
     ${model.props.map((p) => {
             return `\t${p.name} ${p.type} ${p.args ? p.args.join(" ") : ""}`;
+        }).join("\n")}
+    }`;
+    }
+    for (let enumSchema of enums) {
+        file += `
+
+    enum ${enumSchema.name} {
+    ${enumSchema.props.map((p) => {
+            return `\t${p.name}`;
         }).join("\n")}
     }`;
     }

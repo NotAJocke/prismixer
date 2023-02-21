@@ -1,12 +1,21 @@
 export interface Model {
   name: string;
-  props: Array<Prop>;
+  props: Array<ModelProp>;
 }
 
-interface Prop {
+export interface Enum {
+  name: string;
+  props: Array<EnumProp>;
+}
+
+interface ModelProp {
   name: string;
   type: string;
   args?: Array<string>;
+}
+
+interface EnumProp {
+  name: string;
 }
 
 export interface Datasource {
