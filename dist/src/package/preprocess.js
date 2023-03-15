@@ -40,8 +40,9 @@ async function ensurePrismaImportInstalled() {
         let cmd = `${executer} prisma-import --help`;
         (0, child_process_1.exec)(cmd, (err) => {
             if (err) {
-                let manager = (0, utils_1.getPackageManager)();
-                throw new Error(`Prisma Import is not installed. Please install it with '${manager} i -g prisma-import'.`);
+                const manager = (0, utils_1.getPackageManager)();
+                const e = `Prisma Import is not installed. Please install it with '${manager} i prisma-import'.`;
+                throw new Error(e);
             }
             return resolve();
         });

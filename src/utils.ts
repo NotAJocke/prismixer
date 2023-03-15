@@ -18,6 +18,3 @@ export function getPackageManagerExecuter() {
       return "pnpm exec";
   }
 }
-
-setUserPreferences({ packageManager: "pnpm" });
-console.log(getPackageManagerExecuter())

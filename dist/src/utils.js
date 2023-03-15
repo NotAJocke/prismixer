@@ -17,5 +17,3 @@ function getPackageManagerExecuter() {
     }
 }
 exports.getPackageManagerExecuter = getPackageManagerExecuter;
-(0, userPreferences_1.setUserPreferences)({ packageManager: "pnpm" });
-console.log(getPackageManagerExecuter());
