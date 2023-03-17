@@ -20,16 +20,17 @@ interface EnumProp {
 
 export interface Datasource {
   name: string;
-  provider: string;
-  url: string;
+  props: DatasourceProps[]
 }
 
 export interface Generator {
   name: string;
-  provider: string;
-  output?: string;
+  props: GeneratorProps[]
 }
 
-export interface UserPreferences {
-  packageManager: string;
+interface DatasourceProps {
+  name: string;
+  value: string;
 }
+
+interface GeneratorProps extends DatasourceProps {}
